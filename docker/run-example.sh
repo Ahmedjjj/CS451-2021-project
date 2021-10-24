@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker run  -it da_image /bin/bash 
+docker run  -it -v $(pwd)/../example:/root/example da_image /bin/bash 

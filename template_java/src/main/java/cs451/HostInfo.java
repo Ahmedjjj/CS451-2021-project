@@ -17,10 +17,9 @@ public final class HostInfo {
 		portAndIpToId = new HashMap<Integer, Map<String, Integer>>();
 
 		hostList.forEach(host -> {
-			hostMap[host.getId()] = host;
+			hostMap[host.getId() - 1] = host;
 			portAndIpToId.computeIfAbsent(host.getPort(), port -> new HashMap<String, Integer>()).put(host.getIp(),
 					host.getId());
-
 		});
 	}
 
@@ -29,7 +28,7 @@ public final class HostInfo {
 	}
 
 	public static Host getHost(int id) {
-		return hostMap[id];
+		return hostMap[id - 1];
 	}
 
 	public static int getCurrentHostId() {
@@ -41,6 +40,7 @@ public final class HostInfo {
 	}
 
 	public static int hostIdfromIpAndPort(String ip, int port) {
+		System.out.println(portAndIpToId);
 		return portAndIpToId.get(port).get(ip);
 	}
 

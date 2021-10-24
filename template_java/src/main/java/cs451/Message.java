@@ -17,6 +17,9 @@ public final class Message {
 		this.sequenceNbr = sequenceNbr;
 		this.isAck = isAck;
 	}
+	public Message(int sequenceNbr) {
+		this(new byte[0], sequenceNbr, false);
+	}
 
 	public static Message fromPacket(DatagramPacket packet) {
 		byte[] packetData = packet.getData();
