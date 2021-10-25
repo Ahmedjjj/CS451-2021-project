@@ -40,6 +40,15 @@ public class Host implements Comparable<Host> {
 
         return true;
     }
+    
+    public static String ipFromInetAddress(InetAddress address) throws UnknownHostException {
+    	String ipTest = address.toString();
+        if (ipTest.startsWith(IP_START_REGEX)) {
+           return ipTest.substring(1);
+        } else {
+            return InetAddress.getByName(ipTest.split(IP_START_REGEX)[0]).getHostAddress();
+        }
+    }
 
     public int getId() {
         return id;

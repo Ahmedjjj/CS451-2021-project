@@ -40,7 +40,6 @@ public final class HostInfo {
 	}
 
 	public static int hostIdfromIpAndPort(String ip, int port) {
-		System.out.println(portAndIpToId);
 		return portAndIpToId.get(port).get(ip);
 	}
 

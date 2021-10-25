@@ -1,5 +1,7 @@
 package cs451;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -13,7 +15,7 @@ public class Main {
 	private static String outputPath;
 	private static PerfectLink link;
 
-	private static void handleSignal(){
+	private static void handleSignal() {
 		// immediately stop network packet processing
 		System.out.println("Immediately stopping network packet processing.");
 
@@ -34,6 +36,19 @@ public class Main {
 				handleSignal();
 			}
 		});
+	}
+
+	private static int getNumMessages(String configPath) throws IOException {
+		BufferedReader reader = new BufferedReader(new FileReader(configPath));
+		String line = reader.readLine();
+		return Integer.parseInt(line.split("\\s+")[0]);
+	}
+
+	private static int getReceiverHost(String configPath) throws IOException {
+		BufferedReader reader = new BufferedReader(new FileReader(configPath));
+		String line = reader.readLine();
+		return Integer.parseInt(line.split("\\s+")[1]);
+
 	}
 
 	public static void main(String[] args) throws InterruptedException, IOException {
@@ -72,11 +87,13 @@ public class Main {
 		HostInfo.configureFromHostList(parser.hosts());
 		HostInfo.setCurrentHostId(parser.myId());
 		link = new PerfectLink(logger);
-		
-		int receiverHost = 1;
-		int numMessages = 10;
-		System.out.println("Broadcasting and delivering messages...\n");
 
+		int receiverHost = getReceiverHost(parser.config());
+		int numMessages = getNumMessages(parser.config());
+		System.out.println("Broadcasting and delivering messages...\n");
+		System.out.println("Receiver: " + receiverHost);
+		System.out.println("Number of messages: " + numMessages);
+		
 		if (parser.myId() != receiverHost) {
 			for (int i = 1; i <= numMessages; i++) {
 				link.send(new Message(i), receiverHost);
