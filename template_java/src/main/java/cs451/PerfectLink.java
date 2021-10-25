@@ -3,17 +3,13 @@ package cs451;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -23,14 +19,14 @@ public final class PerfectLink {
 
 	private final DatagramSocket socket;
 	private final AtomicBoolean running;
-	private final ConcurrentHashMap<Integer, ConcurrentSkipListSet<Integer>> unacked;
+	private final Set<Message> unacked;
 	private final Receiver receiver;
 
 	public PerfectLink(Receiver receiver) throws SocketException, UnknownHostException {
 		Host curHost = HostInfo.getHost(HostInfo.getCurrentHostId());
 		this.receiver = receiver;
-		this.socket = new DatagramSocket(curHost.getPort(), InetAddress.getByName(curHost.getIp()));
-		this.unacked = new ConcurrentHashMap<Integer, ConcurrentSkipListSet<Integer>>();
+		this.socket = new DatagramSocket(curHost.getPort(),curHost.getInetAddress());
+		this.unacked = ConcurrentHashMap.newKeySet();
 		this.running = new AtomicBoolean(true);
 		new Thread(packetHandler()).start();
 	}
@@ -42,12 +38,10 @@ public final class PerfectLink {
 	private Runnable packetHandler() {
 		return new Runnable() {
 
+			@Override
 			public void run() {
-				Map<Integer, Set<Integer>> delivered = new HashMap<Integer, Set<Integer>>();
+				Set<Message> delivered = new HashSet<>();
 
-				for (int i = 1; i <= HostInfo.numHosts(); i++) {
-					delivered.put(i, new HashSet<Integer>());
-				}
 				while (running.get()) {
 
 					byte[] payload = new byte[MAX_PAYLOAD_LENGTH];
@@ -55,24 +49,22 @@ public final class PerfectLink {
 					try {
 						socket.receive(packet);
 
-						String ip = Host.ipFromInetAddress(packet.getAddress());
-						int senderId = HostInfo.hostIdfromIpAndPort(ip, packet.getPort());
 						Message message = Message.fromPacket(packet);
+						int senderId = message.getSenderId();
+						Host senderHost = HostInfo.getHost(senderId);
 
 						if (message.isAck()) {
-							ConcurrentSkipListSet<Integer> senderUnacked = unacked.computeIfAbsent(senderId,
-									hostId -> new ConcurrentSkipListSet<Integer>());
-							senderUnacked.remove(message.getSequenceNbr());
+							unacked.remove(message);
 						} else {
-							Message ackMsg = message.toAckMessage();
+							Message ackMsg = message.getAck();
 							DatagramPacket ackPacket = ackMsg.toPacket();
 
-							ackPacket.setPort(packet.getPort());
-							ackPacket.setAddress(packet.getAddress());
+							ackPacket.setPort(senderHost.getPort());
+							ackPacket.setAddress(senderHost.getInetAddress());
 							socket.send(ackPacket);
 
-							if (!delivered.get(senderId).contains(message.getSequenceNbr())) {
-								delivered.get(senderId).add(message.getSequenceNbr());
+							if (!delivered.contains(message)) {
+								delivered.add(message);
 								receiver.deliver(message, senderId);
 							}
 						}
@@ -88,25 +80,24 @@ public final class PerfectLink {
 
 	}
 
-	public void send(Message message, int destHost) throws IOException {
-		DatagramPacket packet = message.toPacket();
-		Host destination = HostInfo.getHost(destHost);
+	public void send(Message message) throws IOException {
 
-		packet.setAddress(InetAddress.getByName(destination.getIp()));
-		packet.setPort(destination.getPort());
+		DatagramPacket packet = message.toPacket();
+		Host destinationHost = HostInfo.getHost(message.getReceiverId());
+		packet.setAddress(destinationHost.getInetAddress());
+		packet.setPort(destinationHost.getPort());
 		socket.send(packet);
 
-		ConcurrentSkipListSet<Integer> destUnacked = unacked.computeIfAbsent(destHost,
-				hostId -> new ConcurrentSkipListSet<Integer>());
-		destUnacked.add(message.getSequenceNbr());
-
+		Message ackMsg = message.getAck();
+		unacked.add(ackMsg);
 		Timer ackChecker = new Timer();
 		ackChecker.schedule(new TimerTask() {
 
+			@Override
 			public void run() {
-				if (destUnacked.contains(message.getSequenceNbr()) && running.get()) {
+				if (unacked.contains(ackMsg) && running.get()) {
 					try {
-						send(message, destHost);
+						send(message);
 					} catch (IOException e) {
 						e.printStackTrace();
 					}

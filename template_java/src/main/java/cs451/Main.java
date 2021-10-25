@@ -96,7 +96,7 @@ public class Main {
 		
 		if (parser.myId() != receiverHost) {
 			for (int i = 1; i <= numMessages; i++) {
-				link.send(new Message(i), receiverHost);
+				link.send(new Message(i, HostInfo.getCurrentHostId(), receiverHost));
 				logger.logBroadcast(i);
 			}
 		}
