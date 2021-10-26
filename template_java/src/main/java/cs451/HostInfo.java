@@ -1,9 +1,7 @@
 package cs451;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public final class HostInfo {
 	private static Host hostMap[];
