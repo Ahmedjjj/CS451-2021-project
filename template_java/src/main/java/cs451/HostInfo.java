@@ -33,4 +33,5 @@ public final class HostInfo {
 
 	public static int numHosts() {
 		return numHosts;
+	}
 }
