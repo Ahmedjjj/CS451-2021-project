@@ -9,17 +9,13 @@ public final class HostInfo {
 	private static Host hostMap[];
 	private static int currentHostId;
 	private static int numHosts;
-	private static Map<Integer, Map<String, Integer>> portAndIpToId;
 
 	public static void configureFromHostList(List<Host> hostList) {
 		numHosts = Collections.max(hostList).getId();
 		hostMap = new Host[numHosts];
-		portAndIpToId = new HashMap<Integer, Map<String, Integer>>();
 
 		hostList.forEach(host -> {
 			hostMap[host.getId() - 1] = host;
-			portAndIpToId.computeIfAbsent(host.getPort(), port -> new HashMap<String, Integer>()).put(host.getIp(),
-					host.getId());
 		});
 	}
 
@@ -37,10 +33,4 @@ public final class HostInfo {
 
 	public static int numHosts() {
 		return numHosts;
-	}
-
-	public static int hostIdfromIpAndPort(String ip, int port) {
-		return portAndIpToId.get(port).get(ip);
-	}
-
 }
