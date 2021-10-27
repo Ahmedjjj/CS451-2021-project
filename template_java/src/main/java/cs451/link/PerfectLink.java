@@ -1,4 +1,4 @@
-package cs451;
+package cs451.link;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -10,8 +10,12 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import cs451.host.Host;
+import cs451.host.HostInfo;
+import cs451.message.Message;
+import cs451.util.Receiver;
 
 public final class PerfectLink {
 	private final static int MAX_PAYLOAD_LENGTH = 1000;
@@ -25,7 +29,7 @@ public final class PerfectLink {
 	public PerfectLink(Receiver receiver) throws SocketException, UnknownHostException {
 		Host curHost = HostInfo.getHost(HostInfo.getCurrentHostId());
 		this.receiver = receiver;
-		this.socket = new DatagramSocket(curHost.getPort(),curHost.getInetAddress());
+		this.socket = new DatagramSocket(curHost.getPort(), curHost.getInetAddress());
 		this.unacked = ConcurrentHashMap.newKeySet();
 		this.running = new AtomicBoolean(true);
 		new Thread(packetHandler()).start();
@@ -46,32 +50,39 @@ public final class PerfectLink {
 
 					byte[] payload = new byte[MAX_PAYLOAD_LENGTH];
 					DatagramPacket packet = new DatagramPacket(payload, MAX_PAYLOAD_LENGTH);
+					
 					try {
 						socket.receive(packet);
-
-						Message message = Message.fromPacket(packet);
-						int senderId = message.getSenderId();
-						Host senderHost = HostInfo.getHost(senderId);
-
-						if (message.isAck()) {
-							unacked.remove(message);
-						} else {
-							Message ackMsg = message.getAck();
-							DatagramPacket ackPacket = ackMsg.toPacket();
-
-							ackPacket.setPort(senderHost.getPort());
-							ackPacket.setAddress(senderHost.getInetAddress());
-							socket.send(ackPacket);
-
-							if (!delivered.contains(message)) {
-								delivered.add(message);
-								receiver.deliver(message, senderId);
-							}
-						}
-					} catch (UnknownHostException e1) {
-						e1.printStackTrace();
 					} catch (IOException e) {
 						e.printStackTrace();
+					}
+
+					Message message = Message.fromPacket(packet);
+					int senderId = message.getSenderId();
+					Host senderHost = HostInfo.getHost(senderId);
+
+					if (message.isAck()) {
+						unacked.remove(message);
+					} else {
+						Message ackMsg = message.getAck();
+						DatagramPacket ackPacket = ackMsg.toPacket();
+
+						ackPacket.setPort(senderHost.getPort());
+						try {
+							ackPacket.setAddress(senderHost.getInetAddress());
+						} catch (UnknownHostException e) {
+							e.printStackTrace();
+						}
+						try {
+							socket.send(ackPacket);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+
+						if (!delivered.contains(message)) {
+							delivered.add(message);
+							receiver.deliver(message, senderId);
+						}
 					}
 
 				}

@@ -1,4 +1,4 @@
-package cs451;
+package cs451.message;
 
 import java.net.DatagramPacket;
 import java.nio.ByteBuffer;
@@ -26,7 +26,7 @@ public final class Message{
 
 	public Message(int sequenceNbr, int senderId, int receiverId) {
 		this(new byte[0], sequenceNbr, false, senderId, receiverId);
-	}
+	}	
 
 	public static Message fromPacket(DatagramPacket packet) {
 		byte[] packetData = packet.getData();

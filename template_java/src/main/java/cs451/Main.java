@@ -3,11 +3,13 @@ package cs451;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.Socket;
-import java.net.SocketException;
-import java.net.UnknownHostException;
+
+import cs451.host.Host;
+import cs451.host.HostInfo;
+import cs451.link.PerfectLink;
+import cs451.message.Message;
+import cs451.parser.Parser;
+import cs451.util.Logger;
 
 public class Main {
 
@@ -41,12 +43,14 @@ public class Main {
 	private static int getNumMessages(String configPath) throws IOException {
 		BufferedReader reader = new BufferedReader(new FileReader(configPath));
 		String line = reader.readLine();
+		reader.close();
 		return Integer.parseInt(line.split("\\s+")[0]);
 	}
 
 	private static int getReceiverHost(String configPath) throws IOException {
 		BufferedReader reader = new BufferedReader(new FileReader(configPath));
 		String line = reader.readLine();
+		reader.close();
 		return Integer.parseInt(line.split("\\s+")[1]);
 
 	}
@@ -93,7 +97,7 @@ public class Main {
 		System.out.println("Broadcasting and delivering messages...\n");
 		System.out.println("Receiver: " + receiverHost);
 		System.out.println("Number of messages: " + numMessages);
-		
+
 		if (parser.myId() != receiverHost) {
 			for (int i = 1; i <= numMessages; i++) {
 				link.send(new Message(i, HostInfo.getCurrentHostId(), receiverHost));

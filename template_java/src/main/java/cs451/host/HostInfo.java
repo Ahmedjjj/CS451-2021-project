@@ -1,4 +1,4 @@
-package cs451;
+package cs451.host;
 
 import java.util.Collections;
 import java.util.List;

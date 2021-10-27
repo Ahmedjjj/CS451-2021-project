@@ -1,7 +1,9 @@
-package cs451;
+package cs451.util;
 
 import java.io.FileWriter;
 import java.io.IOException;
+
+import cs451.message.Message;
 
 public final class Logger implements Receiver {
 
