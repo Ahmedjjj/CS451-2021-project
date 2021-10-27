@@ -3,6 +3,8 @@ package cs451.message;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
+import cs451.host.HostInfo;
+
 public final class BroadcastMessage extends Message {
 
 	private static int SENDER_OFFSET = 4;
@@ -22,7 +24,7 @@ public final class BroadcastMessage extends Message {
 		byte[] payload = getPayload();
 		ByteBuffer payloadBuffer = ByteBuffer.allocate(SENDER_OFFSET + payload.length);
 		payloadBuffer.putInt(getOriginalSenderId()).put(payload);
-		return new P2PMessage(payloadBuffer.array(), getSequenceNbr(), false, getSenderId(), receiverId);
+		return new P2PMessage(payloadBuffer.array(), getSequenceNbr(), false, HostInfo.getCurrentHostId(), receiverId);
 	}
 
 	public static BroadcastMessage fromP2PMessage(P2PMessage message) {

@@ -61,6 +61,8 @@ public final class PerfectLink {
 					}
 
 					P2PMessage message = P2PMessage.fromPacket(packet);
+					
+					assert message.getReceiverId() == HostInfo.getCurrentHostId();
 
 					if (message.isAck()) {
 						unacked.remove(message);
@@ -92,7 +94,9 @@ public final class PerfectLink {
 	}
 
 	public void send(P2PMessage message) throws IOException {
-
+		
+		assert message.getSenderId() == HostInfo.getCurrentHostId();
+		
 		DatagramPacket packet = message.toPacket();
 		socket.send(packet);
 
