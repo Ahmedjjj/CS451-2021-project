@@ -14,19 +14,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import cs451.host.Host;
 import cs451.host.HostInfo;
-import cs451.message.Message;
-import cs451.util.Receiver;
+import cs451.message.P2PMessage;
 
 public final class PerfectLink {
+	public interface Receiver{
+		public void deliver(P2PMessage message);
+	}
+	
 	private final static int MAX_PAYLOAD_LENGTH = 1000;
 	private final static long ACK_DELAY = 100;
 
 	private final DatagramSocket socket;
 	private final AtomicBoolean running;
-	private final Set<Message> unacked;
-	private final Receiver receiver;
+	private final Set<P2PMessage> unacked;
+	private final PerfectLink.Receiver receiver;
 
-	public PerfectLink(Receiver receiver) throws SocketException, UnknownHostException {
+	public PerfectLink(PerfectLink.Receiver receiver) throws SocketException, UnknownHostException {
 		Host curHost = HostInfo.getHost(HostInfo.getCurrentHostId());
 		this.receiver = receiver;
 		this.socket = new DatagramSocket(curHost.getPort(), curHost.getInetAddress());
@@ -44,44 +47,37 @@ public final class PerfectLink {
 
 			@Override
 			public void run() {
-				Set<Message> delivered = new HashSet<>();
+				Set<P2PMessage> delivered = new HashSet<>();
 
 				while (running.get()) {
 
 					byte[] payload = new byte[MAX_PAYLOAD_LENGTH];
 					DatagramPacket packet = new DatagramPacket(payload, MAX_PAYLOAD_LENGTH);
-					
+
 					try {
 						socket.receive(packet);
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
 
-					Message message = Message.fromPacket(packet);
-					int senderId = message.getSenderId();
-					Host senderHost = HostInfo.getHost(senderId);
+					P2PMessage message = P2PMessage.fromPacket(packet);
 
 					if (message.isAck()) {
 						unacked.remove(message);
 					} else {
-						Message ackMsg = message.getAck();
-						DatagramPacket ackPacket = ackMsg.toPacket();
-
-						ackPacket.setPort(senderHost.getPort());
+						P2PMessage ackMsg = message.getAck();
 						try {
-							ackPacket.setAddress(senderHost.getInetAddress());
+							DatagramPacket ackPacket = ackMsg.toPacket();
+							socket.send(ackPacket);
 						} catch (UnknownHostException e) {
 							e.printStackTrace();
-						}
-						try {
-							socket.send(ackPacket);
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
 
 						if (!delivered.contains(message)) {
 							delivered.add(message);
-							receiver.deliver(message, senderId);
+							receiver.deliver(message);
 						}
 					}
 
@@ -91,15 +87,12 @@ public final class PerfectLink {
 
 	}
 
-	public void send(Message message) throws IOException {
+	public void send(P2PMessage message) throws IOException {
 
 		DatagramPacket packet = message.toPacket();
-		Host destinationHost = HostInfo.getHost(message.getReceiverId());
-		packet.setAddress(destinationHost.getInetAddress());
-		packet.setPort(destinationHost.getPort());
 		socket.send(packet);
 
-		Message ackMsg = message.getAck();
+		P2PMessage ackMsg = message.getAck();
 		unacked.add(ackMsg);
 		Timer ackChecker = new Timer();
 		ackChecker.schedule(new TimerTask() {
@@ -117,5 +110,7 @@ public final class PerfectLink {
 		}, ACK_DELAY);
 
 	}
+	
+	
 
 }

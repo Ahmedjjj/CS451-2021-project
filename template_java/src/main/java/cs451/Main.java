@@ -8,6 +8,7 @@ import cs451.host.Host;
 import cs451.host.HostInfo;
 import cs451.link.PerfectLink;
 import cs451.message.Message;
+import cs451.message.P2PMessage;
 import cs451.parser.Parser;
 import cs451.util.Logger;
 
@@ -100,7 +101,7 @@ public class Main {
 
 		if (parser.myId() != receiverHost) {
 			for (int i = 1; i <= numMessages; i++) {
-				link.send(new Message(i, HostInfo.getCurrentHostId(), receiverHost));
+				link.send(new P2PMessage(i, HostInfo.getCurrentHostId(), receiverHost));
 				logger.logBroadcast(i);
 			}
 		}
