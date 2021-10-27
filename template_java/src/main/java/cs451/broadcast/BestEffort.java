@@ -23,7 +23,7 @@ public final class BestEffort implements Broadcaster, PerfectLink.Receiver {
 	}
 
 	@Override
-	public void deliver(P2PMessage message) {
+	public void deliver(P2PMessage message) throws IOException {
 		BroadcastMessage originalMessage = BroadcastMessage.fromP2PMessage(message);
 		if (!delivered.contains(originalMessage)) {
 			this.delivered.add(originalMessage);

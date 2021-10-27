@@ -18,7 +18,7 @@ import cs451.message.P2PMessage;
 
 public final class PerfectLink {
 	public interface Receiver{
-		public void deliver(P2PMessage message);
+		public void deliver(P2PMessage message) throws IOException;
 	}
 	
 	private final static int MAX_PAYLOAD_LENGTH = 1000;
@@ -77,7 +77,11 @@ public final class PerfectLink {
 
 						if (!delivered.contains(message)) {
 							delivered.add(message);
-							receiver.deliver(message);
+							try {
+								receiver.deliver(message);
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
 						}
 					}
 

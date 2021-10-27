@@ -35,7 +35,7 @@ public final class BroadcastMessage extends Message {
 
 	}
 
-	public int getOriginalSenderId() {
+	public int getOriginalSenderId(){
 		return originalSenderId;
 	}
 

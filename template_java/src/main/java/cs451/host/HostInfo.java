@@ -7,6 +7,7 @@ public final class HostInfo {
 	private static Host hostMap[];
 	private static int currentHostId;
 	private static int numHosts;
+	private static int minNumCorrectHosts;
 
 	public static void configureFromHostList(List<Host> hostList) {
 		numHosts = Collections.max(hostList).getId();
@@ -15,6 +16,7 @@ public final class HostInfo {
 		hostList.forEach(host -> {
 			hostMap[host.getId() - 1] = host;
 		});
+		minNumCorrectHosts = (numHosts / 2) + 1;
 	}
 
 	public static void setCurrentHostId(int hostId) {
@@ -31,5 +33,9 @@ public final class HostInfo {
 
 	public static int numHosts() {
 		return numHosts;
+	}
+
+	public static int getMinNumCorrectHosts() {
+		return minNumCorrectHosts;
 	}
 }

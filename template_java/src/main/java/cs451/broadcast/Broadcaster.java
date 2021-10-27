@@ -7,7 +7,7 @@ import cs451.message.BroadcastMessage;
 public interface Broadcaster {
 
 	public interface Receiver {
-		public void deliver(BroadcastMessage message);
+		public void deliver(BroadcastMessage message) throws IOException;
 	}
 
 	public void broadcast(BroadcastMessage message) throws IOException;
