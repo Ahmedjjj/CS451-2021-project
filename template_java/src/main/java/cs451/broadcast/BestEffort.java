@@ -14,22 +14,16 @@ import cs451.message.P2PMessage;
 public final class BestEffort implements Broadcaster, PerfectLink.Receiver {
 	private final Broadcaster.Receiver receiver;
 	private final PerfectLink link;
-	private final Set<BroadcastMessage> delivered;
 
 	public BestEffort(Broadcaster.Receiver receiver) throws SocketException, UnknownHostException {
 		this.receiver = receiver;
 		this.link = new PerfectLink(this);
-		this.delivered = new HashSet<>();
 	}
 
 	@Override
 	public void deliver(P2PMessage message) throws IOException {
 		BroadcastMessage originalMessage = BroadcastMessage.fromP2PMessage(message);
-		if (!delivered.contains(originalMessage)) {
-			this.delivered.add(originalMessage);
-			receiver.deliver(originalMessage);
-		}
-
+		receiver.deliver(originalMessage);
 	}
 
 	@Override
