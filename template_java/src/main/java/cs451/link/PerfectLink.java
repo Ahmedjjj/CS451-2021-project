@@ -15,8 +15,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import cs451.host.Host;
 import cs451.host.HostInfo;
 import cs451.message.P2PMessage;
+import cs451.util.Stoppable;
 
-public final class PerfectLink {
+public final class PerfectLink implements Stoppable{
 	public interface Receiver{
 		public void deliver(P2PMessage message) throws IOException;
 	}
@@ -84,6 +85,9 @@ public final class PerfectLink {
 							} catch (IOException e) {
 								e.printStackTrace();
 							}
+						}else {
+							System.out.println("Found duplicate P2P message: sender Id: " + message.getSenderId() + " receiverId: "+ message.getReceiverId() + 
+									" seq num: " + message.getSequenceNbr());
 						}
 					}
 

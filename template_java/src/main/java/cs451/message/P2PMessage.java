@@ -3,25 +3,25 @@ package cs451.message;
 import java.net.DatagramPacket;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Objects;
 
 import cs451.host.Host;
 import cs451.host.HostInfo;
+import static cs451.util.Constants.*; 
 
 public final class P2PMessage extends Message {
 
-	private final static int SEQ_NBR_OFFSET = 4;
-	private final static int ACK_OFFSET = 1;
-	private final static int SENDER_OFFSET = 4;
-	private final static int RECEIVER_OFFSET = 4;
 
 	private final boolean isAck;
 	private final int receiverId;
+	private final int sequenceNbr;
 
 	public P2PMessage(byte[] payload, int sequenceNbr, boolean isAck, int senderId, int receiverId) {
-		super(payload, sequenceNbr, senderId);
+		super(payload, senderId);
 		this.isAck = isAck;
 		this.receiverId = receiverId;
+		this.sequenceNbr = sequenceNbr;
 	}
 
 	public P2PMessage(int sequenceNbr, int senderId, int receiverId) {
@@ -65,7 +65,11 @@ public final class P2PMessage extends Message {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(getSenderId(), getReceiverId(), getSenderId(), isAck());
+		return Objects.hash(getSenderId(), getReceiverId(), getSequenceNbr(), isAck());
+	}
+
+	public int getSequenceNbr() {
+		return sequenceNbr;
 	}
 
 	@Override
@@ -75,7 +79,8 @@ public final class P2PMessage extends Message {
 		} else {
 			P2PMessage otherMsg = (P2PMessage) obj;
 			return otherMsg.getSenderId() == this.getSenderId() && otherMsg.getReceiverId() == getReceiverId()
-					&& otherMsg.getSequenceNbr() == this.getSequenceNbr() && otherMsg.isAck() == isAck();
+					&& otherMsg.getSequenceNbr() == this.getSequenceNbr() && otherMsg.isAck() == isAck()
+					&& Arrays.equals(getPayload(), otherMsg.getPayload());
 		}
 	}
 }

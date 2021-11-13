@@ -4,9 +4,14 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
+import cs451.broadcast.BestEffort;
+import cs451.broadcast.Broadcaster;
+import cs451.broadcast.Fifo;
+import cs451.broadcast.UniformReliable;
 import cs451.host.Host;
 import cs451.host.HostInfo;
 import cs451.link.PerfectLink;
+import cs451.message.BroadcastMessage;
 import cs451.message.Message;
 import cs451.message.P2PMessage;
 import cs451.parser.Parser;
@@ -16,7 +21,7 @@ public class Main {
 
 	private static final Logger logger = new Logger();
 	private static String outputPath;
-	private static PerfectLink link;
+	private static Broadcaster broadcaster;
 
 	private static void handleSignal() {
 		// immediately stop network packet processing
@@ -29,7 +34,7 @@ public class Main {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		link.stop();
+		broadcaster.stop();
 	}
 
 	private static void initSignalHandlers() {
@@ -45,15 +50,7 @@ public class Main {
 		BufferedReader reader = new BufferedReader(new FileReader(configPath));
 		String line = reader.readLine();
 		reader.close();
-		return Integer.parseInt(line.split("\\s+")[0]);
-	}
-
-	private static int getReceiverHost(String configPath) throws IOException {
-		BufferedReader reader = new BufferedReader(new FileReader(configPath));
-		String line = reader.readLine();
-		reader.close();
-		return Integer.parseInt(line.split("\\s+")[1]);
-
+		return Integer.parseInt(line);
 	}
 
 	public static void main(String[] args) throws InterruptedException, IOException {
@@ -91,19 +88,16 @@ public class Main {
 		outputPath = parser.output();
 		HostInfo.configureFromHostList(parser.hosts());
 		HostInfo.setCurrentHostId(parser.myId());
-		link = new PerfectLink(logger);
+		broadcaster = new UniformReliable(logger);
 
-		int receiverHost = getReceiverHost(parser.config());
 		int numMessages = getNumMessages(parser.config());
 		System.out.println("Broadcasting and delivering messages...\n");
-		System.out.println("Receiver: " + receiverHost);
 		System.out.println("Number of messages: " + numMessages);
-
-		if (parser.myId() != receiverHost) {
-			for (int i = 1; i <= numMessages; i++) {
-				link.send(new P2PMessage(i, HostInfo.getCurrentHostId(), receiverHost));
-				logger.logBroadcast(i);
-			}
+		System.out.println("Minimum number of correct hosts: " + HostInfo.getMinNumCorrectHosts());
+		
+		for (int i = 1; i <= numMessages; i++) {
+			logger.logBroadcast(i);
+			broadcaster.broadcast(new BroadcastMessage(i));
 		}
 		// After a process finishes broadcasting,
 		// it waits forever for the delivery of messages.

@@ -13,17 +13,14 @@ public final class Logger implements PerfectLink.Receiver, Broadcaster.Receiver{
 
 	private final StringBuilder log = new StringBuilder();
 
-	private void deliverGeneral(Message message) {
-		logDeliver(message.getSequenceNbr(), message.getSenderId());
-	}
-
 	public void logDeliver(int sequenceNbr, int senderId) {
+		System.out.println(String.format("d %d %d\n", senderId, sequenceNbr));
 		log.append(String.format("d %d %d\n", senderId, sequenceNbr));
 	}
 
 	public void logBroadcast(int sequenceNbr) {
+		System.out.println(String.format("b %d\n", sequenceNbr));
 		log.append(String.format("b %d\n", sequenceNbr));
-
 	}
 
 	public void writeToFile(String path) throws IOException {
@@ -34,11 +31,11 @@ public final class Logger implements PerfectLink.Receiver, Broadcaster.Receiver{
 
 	@Override
 	public void deliver(P2PMessage message) {
-		deliverGeneral(message);
+		logDeliver(message.getSequenceNbr(), message.getSenderId());
 	}
 
 	@Override
 	public void deliver(BroadcastMessage message) {
-		deliverGeneral(message);
+		logDeliver(message.getOriginalSequenceNbr(), message.getOriginalSenderId());
 	}
 }
