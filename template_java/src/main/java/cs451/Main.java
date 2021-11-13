@@ -88,7 +88,7 @@ public class Main {
 		outputPath = parser.output();
 		HostInfo.configureFromHostList(parser.hosts());
 		HostInfo.setCurrentHostId(parser.myId());
-		broadcaster = new UniformReliable(logger);
+		broadcaster = new Fifo(logger);
 
 		int numMessages = getNumMessages(parser.config());
 		System.out.println("Broadcasting and delivering messages...\n");

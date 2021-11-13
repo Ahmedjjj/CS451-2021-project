@@ -4,7 +4,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import cs451.message.BroadcastMessage;
-import cs451.message.Message;
 import cs451.message.P2PMessage;
 import cs451.broadcast.Broadcaster;
 import cs451.link.PerfectLink;
