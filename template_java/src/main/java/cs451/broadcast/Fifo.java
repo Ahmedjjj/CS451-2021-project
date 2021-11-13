@@ -56,14 +56,6 @@ public final class Fifo extends Broadcaster implements Broadcaster.Receiver{
 
 	@Override
 	public void stop() {
-		pending.forEach((k,v) -> {
-			System.out.print(k + ": ");
-			v.forEach(a -> System.out.print(a.getOriginalSequenceNbr() + " "));
-			System.out.println();
-		});
-		for (int i = 0; i < pendingSeqNum.length; i++) {
-			System.out.println(i + ": " + pendingSeqNum[i]);
-		}
 		this.urb.stop();
 	}
 }
