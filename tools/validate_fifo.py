@@ -70,9 +70,9 @@ if __name__ == "__main__":
     for o in results.output:
         print("Checking {}".format(o))
         if checkProcess(o):
-            print("Validation failed!")
-        else:
             print("Validation OK")
+        else:
+            print("Validation failed!")
 
 
 

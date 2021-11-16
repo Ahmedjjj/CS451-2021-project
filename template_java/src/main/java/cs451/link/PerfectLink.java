@@ -7,8 +7,6 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -17,11 +15,11 @@ import cs451.host.HostInfo;
 import cs451.message.P2PMessage;
 import cs451.util.Stoppable;
 
-public final class PerfectLink implements Stoppable{
-	public interface Receiver{
+public final class PerfectLink implements Stoppable {
+	public interface Receiver {
 		public void deliver(P2PMessage message) throws IOException;
 	}
-	
+
 	private final static int MAX_PAYLOAD_LENGTH = 1000;
 	private final static long ACK_DELAY = 100;
 
@@ -62,7 +60,7 @@ public final class PerfectLink implements Stoppable{
 					}
 
 					P2PMessage message = P2PMessage.fromPacket(packet);
-					
+
 					assert message.getReceiverId() == HostInfo.getCurrentHostId();
 
 					if (message.isAck()) {
@@ -85,9 +83,10 @@ public final class PerfectLink implements Stoppable{
 							} catch (IOException e) {
 								e.printStackTrace();
 							}
-						}else {
-							System.out.println("Found duplicate P2P message: sender Id: " + message.getSenderId() + " receiverId: "+ message.getReceiverId() + 
-									" seq num: " + message.getSequenceNbr());
+						} else {
+							System.out.println(
+									"Found duplicate P2P message: sender Id: " + message.getSenderId() + " receiverId: "
+											+ message.getReceiverId() + " seq num: " + message.getSequenceNbr());
 						}
 					}
 
@@ -97,32 +96,36 @@ public final class PerfectLink implements Stoppable{
 
 	}
 
-	public void send(P2PMessage message) throws IOException {
-		
+	public void send(P2PMessage message){
+
 		assert message.getSenderId() == HostInfo.getCurrentHostId();
-		
-		DatagramPacket packet = message.toPacket();
-		socket.send(packet);
 
-		P2PMessage ackMsg = message.getAck();
-		unacked.add(ackMsg);
-		Timer ackChecker = new Timer();
-		ackChecker.schedule(new TimerTask() {
-
+		Thread sender = new Thread() {
 			@Override
 			public void run() {
-				if (unacked.contains(ackMsg) && running.get()) {
-					try {
-						send(message);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}, ACK_DELAY);
 
+				try {
+
+					DatagramPacket packet;
+					packet = message.toPacket();
+					P2PMessage ackMsg = message.getAck();
+					unacked.add(ackMsg);
+					do {
+						socket.send(packet);
+						Thread.sleep(ACK_DELAY);
+					} while ((unacked.contains(ackMsg) && running.get()));
+
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+			}
+		};
+		sender.start();
 	}
-	
-	
 
 }
